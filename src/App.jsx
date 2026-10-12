@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { createProject, loadMatches, loadMembers, loadProjects } from './api.js'
 import { seedMembers } from './data.js'
+import LoginPage from './LoginPage.jsx'
 
 const navItems = [
   { label: 'Overview', icon: LayoutDashboard },
@@ -23,6 +24,13 @@ function displayDeadline(deadline) {
 }
 
 function App() {
+  const [demoAccess, setDemoAccess] = useState(false)
+
+  if (!demoAccess) return <LoginPage onContinue={() => setDemoAccess(true)} />
+  return <Dashboard onExit={() => setDemoAccess(false)} />
+}
+
+function Dashboard({ onExit }) {
   const [projects, setProjects] = useState([])
   const [members, setMembers] = useState(seedMembers)
   const [matches, setMatches] = useState([])
@@ -57,8 +65,8 @@ function App() {
 
   useEffect(() => {
     function handleToast(event) { notify(event.detail) }
-    window.addEventListener('forma:toast', handleToast)
-    return () => window.removeEventListener('forma:toast', handleToast)
+    window.addEventListener('smartteams:toast', handleToast)
+    return () => window.removeEventListener('smartteams:toast', handleToast)
   }, [])
 
   const visibleProjects = projects.filter((project) => {
@@ -87,10 +95,10 @@ function App() {
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobileNavOpen ? 'sidebar-open' : ''}`}>
-        <a className="brand" href="#overview" onClick={() => setView('Overview')} aria-label="Forma home">
-          <span className="brand-mark"><span /><span /><span /></span><span>forma</span>
+        <a className="brand" href="#overview" onClick={() => setView('Overview')} aria-label="SmartTeams home">
+          <span className="brand-mark"><span /><span /><span /></span><span>SmartTeams</span>
         </a>
-        <div className="workspace-switcher"><span className="workspace-symbol">N</span><span className="workspace-copy"><strong>Northstar Studio</strong><small>Workspace</small></span><ChevronDown size={15} /></div>
+        <div className="workspace-switcher"><span className="workspace-symbol">S</span><span className="workspace-copy"><strong>SmartTeams</strong><small>Team workspace</small></span><ChevronDown size={15} /></div>
         <p className="nav-label">WORKSPACE</p>
         <nav className="primary-nav" aria-label="Main navigation">
           {navItems.map(({ label, icon: Icon }) => (
@@ -112,11 +120,11 @@ function App() {
         <header className="topbar">
           <button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={19} /></button>
           <div className="breadcrumbs"><span>Workspace</span><ChevronRight size={14} /><strong>{view}</strong></div>
-          <div className="topbar-actions"><span className="today-label"><CalendarDays size={15} /> Sunday, October 11</span><button className="icon-button notification-button" aria-label="Notifications" onClick={() => notify('You are all caught up.')}><Bell size={17} /><i /></button><span className="topbar-divider" /><Avatar member={{ initials: 'MC', color: 'mint' }} /></div>
+          <div className="topbar-actions"><span className="today-label"><CalendarDays size={15} /> Sunday, October 11</span><button className="icon-button notification-button" aria-label="Notifications" onClick={() => notify('You are all caught up.')}><Bell size={17} /><i /></button><span className="topbar-divider" /><Avatar member={{ initials: 'MC', color: 'mint' }} /><button className="exit-demo-button" onClick={onExit}>Exit demo</button></div>
         </header>
 
         <div className="content-wrap">
-          <section className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> TEAM INTELLIGENCE <span className="eyebrow-year">2026 / Q4</span></div><h1>Build the right team.</h1><p>Good work starts with the right people in the room.</p></div><button className="button button-dark" onClick={() => setIsModalOpen(true)}><Plus size={17} /> New project</button></section>
+          <section className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> TEAM FORMATION &amp; SKILL MATCHING <span className="eyebrow-year">2026 / Q4</span></div><h1>Build the right team.</h1><p>Match the right skills and availability to every project.</p></div><button className="button button-dark" onClick={() => setIsModalOpen(true)}><Plus size={17} /> New project</button></section>
 
           {offline && <div className="connection-note"><span className="connection-dot" /> Demo data · Spring Boot API is offline</div>}
 
@@ -152,7 +160,7 @@ function App() {
           </section>
 
           <section className="bottom-strip"><div className="bottom-strip-icon"><Sparkles size={17} /></div><div><strong>Make room for good work.</strong><span>People with overlapping skills can be the difference between a team and a great one.</span></div><button className="text-button" onClick={() => notify('Your team profile is up to date.')}>Team directory <ArrowUpRight size={14} /></button></section>
-          <footer className="page-footer"><span>FORMA <i /> TEAM INTELLIGENCE</span><span>BUILT FOR BETTER WORK, TOGETHER</span></footer>
+          <footer className="page-footer"><span>SMARTTEAMS <i /> TEAM FORMATION &amp; SKILL MATCHING</span><span>THE RIGHT PEOPLE. THE RIGHT PROJECTS.</span></footer>
         </div>
       </main>
 
@@ -167,7 +175,7 @@ function PeopleDirectory({ members, query, onQueryChange, projectName }) {
   return <section className="directory-panel" aria-label="People directory">
     <div className="section-heading"><div><span className="section-kicker">THE PEOPLE</span><h2>Matching talent <span>{String(visibleMembers.length).padStart(2, '0')}</span></h2></div><span className="directory-context">Ranked for {projectName || 'your project'}</span></div>
     <label className="search-field directory-search"><Search size={15} /><input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search people or skills" aria-label="Search people or skills" />{query && <button aria-label="Clear search" onClick={() => onQueryChange('')}><X size={14} /></button>}</label>
-    <div className="directory-list">{visibleMembers.length ? visibleMembers.map((member) => <article className="directory-row" key={member.id}><Avatar member={member} /><div className="directory-person"><strong>{member.name}</strong><span>{member.role} <i /> {member.level}</span><small>{member.location}</small></div><div className="directory-skills">{member.skills.slice(0, 3).map((skill) => <span key={skill}>{skill}</span>)}</div><div className="directory-availability"><span>{member.availability}% available</span><i><b style={{ width: `${member.availability}%` }} /></i></div><div className="directory-fit"><strong>{member.matchScore}%</strong><small>FIT</small></div><button className="candidate-add" aria-label={`Add ${member.name} to project`} onClick={() => window.dispatchEvent(new CustomEvent('forma:toast', { detail: `${member.name} added to shortlist.` }))}><Plus size={15} /></button></article>) : <div className="empty-state">No matching people found.</div>}</div>
+    <div className="directory-list">{visibleMembers.length ? visibleMembers.map((member) => <article className="directory-row" key={member.id}><Avatar member={member} /><div className="directory-person"><strong>{member.name}</strong><span>{member.role} <i /> {member.level}</span><small>{member.location}</small></div><div className="directory-skills">{member.skills.slice(0, 3).map((skill) => <span key={skill}>{skill}</span>)}</div><div className="directory-availability"><span>{member.availability}% available</span><i><b style={{ width: `${member.availability}%` }} /></i></div><div className="directory-fit"><strong>{member.matchScore}%</strong><small>FIT</small></div><button className="candidate-add" aria-label={`Add ${member.name} to project`} onClick={() => window.dispatchEvent(new CustomEvent('smartteams:toast', { detail: `${member.name} added to shortlist.` }))}><Plus size={15} /></button></article>) : <div className="empty-state">No matching people found.</div>}</div>
   </section>
 }
 
@@ -183,7 +191,7 @@ function ProjectRow({ project, active, onClick }) {
 
 function CandidateRow({ member, index }) {
   const matchedSkills = member.skills.slice(0, 2)
-  return <article className="candidate-row"><Avatar member={member} /><div className="candidate-info"><div className="candidate-name"><strong>{member.name}</strong>{index === 0 && <span className="top-match">TOP MATCH</span>}</div><span className="candidate-role">{member.role} <i /> {member.level}</span><div className="candidate-skill-tags">{matchedSkills.map((skill) => <span key={skill}>{skill}</span>)}</div></div><div className="candidate-fit"><strong>{member.matchScore}%</strong><span>FIT</span></div><button className="candidate-add" aria-label={`Add ${member.name} to project`} title={`Add ${member.name}`} onClick={() => window.dispatchEvent(new CustomEvent('forma:toast', { detail: `${member.name} added to shortlist.` }))}><Plus size={15} /></button></article>
+  return <article className="candidate-row"><Avatar member={member} /><div className="candidate-info"><div className="candidate-name"><strong>{member.name}</strong>{index === 0 && <span className="top-match">TOP MATCH</span>}</div><span className="candidate-role">{member.role} <i /> {member.level}</span><div className="candidate-skill-tags">{matchedSkills.map((skill) => <span key={skill}>{skill}</span>)}</div></div><div className="candidate-fit"><strong>{member.matchScore}%</strong><span>FIT</span></div><button className="candidate-add" aria-label={`Add ${member.name} to project`} title={`Add ${member.name}`} onClick={() => window.dispatchEvent(new CustomEvent('smartteams:toast', { detail: `${member.name} added to shortlist.` }))}><Plus size={15} /></button></article>
 }
 
 function ProjectModal({ onClose, onSubmit }) {
